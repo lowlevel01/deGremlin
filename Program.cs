@@ -45,7 +45,6 @@ public class Program
         var assembly = Assembly.LoadFrom(filepath);
                                                              
 
-        string result = MethodInvoker.InvokeMethod(assembly, 0x06000003, new object[] { 6902, 19776, 231 });
         //Console.WriteLine(result);
         string filename = Path.GetFileName(filepath);
         filepath = filepath.Replace(filename, $"patched_{filename}");

@@ -28,7 +28,7 @@ degremlin.exe [filepath] [method_token]
 
 # IT DOES
 - [x] Patch most obfuscated strings
-- [x] Simply Addition and XOR mixed boolean arithmetic
+- [x] Simplify Addition and XOR mixed boolean arithmetic
 - [x] Eliminate sizeof's
 - [x] Eliminate EmptyType
 

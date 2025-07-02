@@ -4,10 +4,6 @@
 
 
 
-# Example
-##### This is from the Gremlin Stealer sample
-![](images/before_after.png)
-
 # USAGE
 
 ````
@@ -23,6 +19,12 @@
 Usage:
 degremlin.exe [filepath] [method_token]
 ````
+
+
+# Example
+##### This is from the Gremlin Stealer sample
+![](images/before_after.png)
+
 
 # IT DOES
 - [x] Patch most obfuscated strings

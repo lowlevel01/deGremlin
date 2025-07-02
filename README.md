@@ -17,7 +17,7 @@
                                                                         P.S: little bit Appfuscator
 
 Usage:
-degremlin.exe [filepath] [method_token]
+degremlin.exe [filepath] [method_token_in_hex]
 ````
 
 

@@ -417,7 +417,7 @@ public static class MethodInvoker
 {
     public static string InvokeMethod(Assembly assembly, int token, params object[] args)
     {
-        var method_ = assembly.ManifestModule.ResolveMethod(0x06000003) as MethodInfo;
+        var method_ = assembly.ManifestModule.ResolveMethod(token) as MethodInfo;
 
         if (method_ == null)
             throw new InvalidOperationException("Method not found");

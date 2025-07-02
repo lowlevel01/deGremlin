@@ -4,6 +4,10 @@
 
 
 
+# Example
+##### This is from the Gremlin Stealer sample
+![](images/before_after.png)
+
 # USAGE
 
 ````
@@ -29,5 +33,6 @@ degremlin.exe [filepath] [method_token]
 
 # TO-DO
 - [ ] Patch terneary operator
+- [ ] Cover more patterns
 
 

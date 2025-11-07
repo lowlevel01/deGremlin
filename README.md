@@ -36,6 +36,7 @@ degremlin.exe [filepath] [method_token_in_hex]
 
 # TO-DO
 - [ ] Patch terneary operator
+- [ ] Replace variables by their values
 - [ ] Cover more patterns
 
 

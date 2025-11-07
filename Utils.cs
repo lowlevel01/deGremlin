@@ -118,7 +118,8 @@ public class DeGremlin
                                         pointer--;
                                         continue;
                                     }
-                                    if (current_inst.OpCode != CilOpCodes.Ldc_I4)
+                                    
+                                    if (!current_inst.OpCode.Mnemonic.StartsWith("ldc."))
                                     {
                                         break;
                                     }
@@ -300,6 +301,9 @@ public class DeGremlin
                                     else if (prev_inst.OpCode == CilOpCodes.Ldc_I4)
                                     {
                                         val1 = (int)(prev_inst.Operand);
+                                    }else if(prev_inst.OpCode == CilOpCodes.Ldc_I8)
+                                    {
+                                        val1 = (int)(prev_inst.Operand);
                                     }
                                     else
                                     {
@@ -311,6 +315,10 @@ public class DeGremlin
                                         val2 = (int)(sbyte)(prev_inst2.Operand);
                                     }
                                     else if (prev_inst2.OpCode == CilOpCodes.Ldc_I4)
+                                    {
+                                        val2 = (int)(prev_inst2.Operand);
+                                    }
+                                    else if (prev_inst.OpCode == CilOpCodes.Ldc_I8)
                                     {
                                         val2 = (int)(prev_inst2.Operand);
                                     }

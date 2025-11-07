@@ -42,6 +42,7 @@ public class DeGremlin
         //transformStoI4();
         removeAdd();
         removeXOR();
+        removeAddOvf();
         decryptStrings();
 
         removeSizeof();
@@ -50,6 +51,7 @@ public class DeGremlin
         //transformStoI4();
         removeAdd();
         removeXOR();
+        removeAddOvf();
         decryptStrings();
 
         removeSizeof();
@@ -58,6 +60,7 @@ public class DeGremlin
         //transformStoI4();
         removeAdd();
         removeXOR();
+        removeAddOvf();
         decryptStrings();
 
         removeSizeof();
@@ -66,6 +69,7 @@ public class DeGremlin
         //transformStoI4();
         removeAdd();
         removeXOR();
+        removeAddOvf();
         decryptStrings();
     }
 
@@ -333,6 +337,73 @@ public class DeGremlin
             }
         }
     }
+
+    private void removeAddOvf()
+    {
+        foreach (var type in module.GetAllTypes())
+        {
+            foreach (var method in type.Methods)
+            {
+                if (method.HasMethodBody)
+                {
+                    if (method.CilMethodBody is { } body)
+                    {
+                        foreach (var instruction in body.Instructions)
+                        {
+                            if (instruction.OpCode == CilOpCodes.Add_Ovf)
+                            {
+                                try
+                                {
+                                    var index = body.Instructions.IndexOf(instruction);
+
+                                    int idx1, idx2;
+                                    var prev_inst = GetPrevNonNop(body.Instructions, index, out idx1);
+                                    var prev_inst2 = GetPrevNonNop(body.Instructions, idx1, out idx2);
+
+                                    if (prev_inst == null || prev_inst2 == null)
+                                        continue;
+
+                                    int val1, val2;
+                                    if (prev_inst.OpCode == CilOpCodes.Ldc_I4_S)
+                                    {
+                                        val1 = (int)(sbyte)(prev_inst.Operand);
+                                    }
+                                    else if (prev_inst.OpCode == CilOpCodes.Ldc_I4)
+                                    {
+                                        val1 = (int)(prev_inst.Operand);
+                                    }
+                                    else
+                                    {
+                                        continue;
+                                    }
+
+                                    if (prev_inst2.OpCode == CilOpCodes.Ldc_I4_S)
+                                    {
+                                        val2 = (int)(sbyte)(prev_inst2.Operand);
+                                    }
+                                    else if (prev_inst2.OpCode == CilOpCodes.Ldc_I4)
+                                    {
+                                        val2 = (int)(prev_inst2.Operand);
+                                    }
+                                    else
+                                    {
+                                        continue;
+                                    }
+
+                                    int sum = val1 + val2;
+
+                                    body.Instructions[idx1].ReplaceWithNop();
+                                    body.Instructions[idx2].ReplaceWithNop();
+                                    instruction.ReplaceWith(CilOpCodes.Ldc_I4, (int)sum);
+                                }
+                                catch (Exception ex) { continue; }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
     private void removeChecked()
     {
         foreach (var type in module.GetAllTypes())
@@ -478,6 +549,7 @@ public class DeGremlin
         }
     }
 }
+
 public static class MethodInvoker
 {
     public static string InvokeMethod(Assembly assembly, int token, params object[] args)

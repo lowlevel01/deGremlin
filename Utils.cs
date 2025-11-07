@@ -6,7 +6,8 @@ using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.PE.DotNet.Cil;
 
 
-
+// ldc.i4.2 etc.. should be handled since the Operand is null
+// multiplication needs to be implemented
 public class DeGremlin
 {
     private readonly ModuleDefinition module;
@@ -36,41 +37,17 @@ public class DeGremlin
 
     public void Process()
     {
-        removeSizeof();
-        removeEmptyType();
-        removeChecked();
-        //transformStoI4();
-        removeAdd();
-        removeXOR();
-        removeAddOvf();
-        decryptStrings();
-
-        removeSizeof();
-        removeEmptyType();
-        removeChecked();
-        //transformStoI4();
-        removeAdd();
-        removeXOR();
-        removeAddOvf();
-        decryptStrings();
-
-        removeSizeof();
-        removeEmptyType();
-        removeChecked();
-        //transformStoI4();
-        removeAdd();
-        removeXOR();
-        removeAddOvf();
-        decryptStrings();
-
-        removeSizeof();
-        removeEmptyType();
-        removeChecked();
-        //transformStoI4();
-        removeAdd();
-        removeXOR();
-        removeAddOvf();
-        decryptStrings();
+        for (int i = 0; i < 10; i++)
+        {
+            removeSizeof();
+            removeEmptyType();
+            removeChecked();
+            //transformStoI4();
+            removeAdd();
+            //removeSub();
+            removeXOR();
+            decryptStrings();
+        }
     }
 
     // method to get previous non-NOP instruction
@@ -118,7 +95,13 @@ public class DeGremlin
                                         pointer--;
                                         continue;
                                     }
-                                    
+                                    if (current_inst.OpCode.Mnemonic.StartsWith("conv."))
+                                    {
+                                        pointer--;
+                                        current_inst.ReplaceWithNop();
+                                        continue;
+                                    }
+
                                     if (!current_inst.OpCode.Mnemonic.StartsWith("ldc."))
                                     {
                                         break;
@@ -280,7 +263,10 @@ public class DeGremlin
                     {
                         foreach (var instruction in body.Instructions)
                         {
-                            if (instruction.OpCode == CilOpCodes.Add)
+                            // current_inst.OpCode.Mnemonic.StartsWith("ldc.")
+                            if (instruction.OpCode == CilOpCodes.Add ||
+                                instruction.OpCode == CilOpCodes.Add_Ovf ||
+                                instruction.OpCode == CilOpCodes.Add_Ovf_Un)
                             {
                                 try
                                 {
@@ -346,19 +332,24 @@ public class DeGremlin
         }
     }
 
-    private void removeAddOvf()
+    private void removeSub()
     {
         foreach (var type in module.GetAllTypes())
         {
             foreach (var method in type.Methods)
             {
+                //Console.WriteLine($"{method.Name} : {method.MetadataToken}");
+
                 if (method.HasMethodBody)
                 {
                     if (method.CilMethodBody is { } body)
                     {
                         foreach (var instruction in body.Instructions)
                         {
-                            if (instruction.OpCode == CilOpCodes.Add_Ovf)
+                            // current_inst.OpCode.Mnemonic.StartsWith("ldc.")
+                            if (instruction.OpCode == CilOpCodes.Sub ||
+                                instruction.OpCode == CilOpCodes.Sub_Ovf ||
+                                instruction.OpCode == CilOpCodes.Sub_Ovf_Un)
                             {
                                 try
                                 {
@@ -380,6 +371,10 @@ public class DeGremlin
                                     {
                                         val1 = (int)(prev_inst.Operand);
                                     }
+                                    else if (prev_inst.OpCode == CilOpCodes.Ldc_I8)
+                                    {
+                                        val1 = (int)(prev_inst.Operand);
+                                    }
                                     else
                                     {
                                         continue;
@@ -393,25 +388,37 @@ public class DeGremlin
                                     {
                                         val2 = (int)(prev_inst2.Operand);
                                     }
+                                    else if (prev_inst2.OpCode == CilOpCodes.Ldc_I8)
+                                    {
+                                        val2 = (int)(prev_inst2.Operand);
+                                    }
                                     else
                                     {
                                         continue;
                                     }
 
-                                    int sum = val1 + val2;
 
+                                    int diff = val2 - val1;
+                                    Console.WriteLine(val2.ToString());
+                                    Console.WriteLine(val1.ToString());
+                                    Console.WriteLine(diff.ToString());
+                                    Console.WriteLine("----------");
                                     body.Instructions[idx1].ReplaceWithNop();
                                     body.Instructions[idx2].ReplaceWithNop();
-                                    instruction.ReplaceWith(CilOpCodes.Ldc_I4, (int)sum);
+                                    instruction.ReplaceWith(CilOpCodes.Ldc_I4, (int)diff);
+                                    //Console.WriteLine(prev_inst);
                                 }
                                 catch (Exception ex) { continue; }
                             }
+                            //Console.WriteLine($"0x{Convert.ToString(instruction.Offset, 16)}");
+
                         }
                     }
                 }
             }
         }
     }
+
     private void removeChecked()
     {
         foreach (var type in module.GetAllTypes())

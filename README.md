@@ -31,7 +31,8 @@ degremlin.exe [filepath] [method_token_in_hex]
 - [x] Simplify Addition and XOR mixed boolean arithmetic
 - [x] Eliminate sizeof's
 - [x] Eliminate EmptyType
-
+- [x] Eliminate variants of Add (e.g. Add.ovf)
+- [x] Handle arguments casted to int before being passed to the decryption method 
 
 # TO-DO
 - [ ] Patch terneary operator

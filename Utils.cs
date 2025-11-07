@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Reflection;
 using AsmResolver;
 using AsmResolver.DotNet;
+using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.PE.DotNet.Cil;
 
 
@@ -42,6 +43,45 @@ public class DeGremlin
         removeAdd();
         removeXOR();
         decryptStrings();
+
+        removeSizeof();
+        removeEmptyType();
+        removeChecked();
+        //transformStoI4();
+        removeAdd();
+        removeXOR();
+        decryptStrings();
+
+        removeSizeof();
+        removeEmptyType();
+        removeChecked();
+        //transformStoI4();
+        removeAdd();
+        removeXOR();
+        decryptStrings();
+
+        removeSizeof();
+        removeEmptyType();
+        removeChecked();
+        //transformStoI4();
+        removeAdd();
+        removeXOR();
+        decryptStrings();
+    }
+
+    // method to get previous non-NOP instruction
+    private CilInstruction GetPrevNonNop(CilInstructionCollection instructions, int startIndex, out int foundIndex)
+    {
+        foundIndex = -1;
+        for (int i = startIndex - 1; i >= 0; i--)
+        {
+            if (instructions[i].OpCode != CilOpCodes.Nop)
+            {
+                foundIndex = i;
+                return instructions[i];
+            }
+        }
+        return null;
     }
 
     private void decryptStrings()
@@ -69,14 +109,14 @@ public class DeGremlin
                                 while (pointer >= 0 && argsFound < 3)
                                 {
                                     var current_inst = body.Instructions[pointer];
-                                    if (current_inst.OpCode != CilOpCodes.Nop && current_inst.OpCode != CilOpCodes.Ldc_I4)
-                                    {
-                                        break;
-                                    }
                                     if (current_inst.OpCode == CilOpCodes.Nop)
                                     {
                                         pointer--;
                                         continue;
+                                    }
+                                    if (current_inst.OpCode != CilOpCodes.Ldc_I4)
+                                    {
+                                        break;
                                     }
                                     arguments.Insert(0, Convert.ToInt32(current_inst.Operand));
                                     indices.Insert(0, pointer);
@@ -84,9 +124,10 @@ public class DeGremlin
                                     pointer--;
                                 }
 
-                                if (pointer > 0 && body.Instructions[pointer - 1].OpCode != CilOpCodes.Nop)
+                                
+                                while (pointer >= 0 && body.Instructions[pointer].OpCode == CilOpCodes.Nop)
                                 {
-                                    continue;
+                                    pointer--;
                                 }
 
                                 if (arguments.Count == 3)
@@ -167,31 +208,46 @@ public class DeGremlin
                                 try
                                 {
                                     var index = body.Instructions.IndexOf(instruction);
-                                    var prev_inst = body.Instructions[index - 1];
-                                    var prev_inst2 = body.Instructions[index - 2];
+
+                                    int idx1, idx2;
+                                    var prev_inst = GetPrevNonNop(body.Instructions, index, out idx1);
+                                    var prev_inst2 = GetPrevNonNop(body.Instructions, idx1, out idx2);
+
+                                    if (prev_inst == null || prev_inst2 == null)
+                                        continue;
+
                                     int val1, val2;
                                     if (prev_inst.OpCode == CilOpCodes.Ldc_I4_S)
                                     {
                                         val1 = (int)(sbyte)(prev_inst.Operand);
                                     }
-                                    else
+                                    else if (prev_inst.OpCode == CilOpCodes.Ldc_I4)
                                     {
                                         val1 = (int)(prev_inst.Operand);
                                     }
+                                    else
+                                    {
+                                        continue;
+                                    }
+
                                     if (prev_inst2.OpCode == CilOpCodes.Ldc_I4_S)
                                     {
                                         val2 = (int)(sbyte)(prev_inst2.Operand);
                                     }
-                                    else
+                                    else if (prev_inst2.OpCode == CilOpCodes.Ldc_I4)
                                     {
                                         val2 = (int)(prev_inst2.Operand);
+                                    }
+                                    else
+                                    {
+                                        continue;
                                     }
 
 
                                     int xor = val1 ^ val2;
 
-                                    prev_inst.ReplaceWithNop();
-                                    prev_inst2.ReplaceWithNop();
+                                    body.Instructions[idx1].ReplaceWithNop();
+                                    body.Instructions[idx2].ReplaceWithNop();
                                     instruction.ReplaceWith(CilOpCodes.Ldc_I4, (int)xor);
                                     //Console.WriteLine(prev_inst);
                                 }
@@ -224,34 +280,50 @@ public class DeGremlin
                                 try
                                 {
                                     var index = body.Instructions.IndexOf(instruction);
-                                    var prev_inst = body.Instructions[index - 1];
-                                    var prev_inst2 = body.Instructions[index - 2];
+
+                                    int idx1, idx2;
+                                    var prev_inst = GetPrevNonNop(body.Instructions, index, out idx1);
+                                    var prev_inst2 = GetPrevNonNop(body.Instructions, idx1, out idx2);
+
+                                    if (prev_inst == null || prev_inst2 == null)
+                                        continue;
+
                                     int val1, val2;
-                                    if(prev_inst.OpCode == CilOpCodes.Ldc_I4_S)
+                                    if (prev_inst.OpCode == CilOpCodes.Ldc_I4_S)
                                     {
                                         val1 = (int)(sbyte)(prev_inst.Operand);
                                     }
-                                    else
+                                    else if (prev_inst.OpCode == CilOpCodes.Ldc_I4)
                                     {
                                         val1 = (int)(prev_inst.Operand);
                                     }
+                                    else
+                                    {
+                                        continue;
+                                    }
+
                                     if (prev_inst2.OpCode == CilOpCodes.Ldc_I4_S)
                                     {
                                         val2 = (int)(sbyte)(prev_inst2.Operand);
                                     }
-                                    else
+                                    else if (prev_inst2.OpCode == CilOpCodes.Ldc_I4)
                                     {
                                         val2 = (int)(prev_inst2.Operand);
+                                    }
+                                    else
+                                    {
+                                        continue;
                                     }
 
 
                                     int sum = val1 + val2;
-                                    
-                                    prev_inst.ReplaceWithNop();
-                                    prev_inst2.ReplaceWithNop();
+
+                                    body.Instructions[idx1].ReplaceWithNop();
+                                    body.Instructions[idx2].ReplaceWithNop();
                                     instruction.ReplaceWith(CilOpCodes.Ldc_I4, (int)sum);
                                     //Console.WriteLine(prev_inst);
-                                }catch(Exception ex) {continue;}
+                                }
+                                catch (Exception ex) { continue; }
                             }
                             //Console.WriteLine($"0x{Convert.ToString(instruction.Offset, 16)}");
 
@@ -278,9 +350,7 @@ public class DeGremlin
                             if (Array.Exists(ConvOvfOpCodes, op => op == instruction.OpCode))
                             {
                                 instruction.ReplaceWithNop();
-                                var index = body.Instructions.IndexOf(instruction);
-                                var prev_inst = body.Instructions[index-1];
-                                //Console.WriteLine(prev_inst);
+                                // not needed to check previous instruction for this operation
                             }
                             //Console.WriteLine($"0x{Convert.ToString(instruction.Offset, 16)}");
 
@@ -304,33 +374,28 @@ public class DeGremlin
                     {
                         foreach (var instruction in body.Instructions)
                         {
-                         
+                            // Deobfuscating System.Type::EmptyTypes
+                            if (instruction.OpCode == CilOpCodes.Ldlen)
+                            {
+                                var index = body.Instructions.IndexOf(instruction);
 
+                                int prevIdx;
+                                var previous_inst = GetPrevNonNop(body.Instructions, index, out prevIdx);
 
-                                // Deobfuscating System.Type::EmptyTypes
-                                if (instruction.OpCode == CilOpCodes.Ldlen)
+                                if (previous_inst == null)
+                                    continue;
+
+                                if (previous_inst.Operand is AsmResolver.DotNet.IFieldDescriptor field
+                                        && field.Name == "EmptyTypes"
+                                        && field.DeclaringType?.FullName == "System.Type")
                                 {
-                                    var index = body.Instructions.IndexOf(instruction);
-                                    var previous_inst = body.Instructions[index - 1];
-
-
-
-
-                                    if (previous_inst.Operand is AsmResolver.DotNet.IFieldDescriptor field
-                                            && field.Name == "EmptyTypes"
-                                            && field.DeclaringType?.FullName == "System.Type")
-                                    {
-                                        //Console.WriteLine(previous_inst);
-                                        instruction.ReplaceWith(CilOpCodes.Ldc_I4, 0);
-                                        previous_inst.ReplaceWithNop();
-                                        body.ComputeMaxStack(true);
-                                    }
-
+                                    //Console.WriteLine(previous_inst);
+                                    instruction.ReplaceWith(CilOpCodes.Ldc_I4, 0);
+                                    body.Instructions[prevIdx].ReplaceWithNop();
+                                    body.ComputeMaxStack(true);
                                 }
                             }
-                            //Console.WriteLine($"0x{Convert.ToString(instruction.Offset, 16)}");
-
-                        
+                        }
                     }
                 }
             }

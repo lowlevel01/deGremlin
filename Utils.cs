@@ -6,8 +6,7 @@ using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.PE.DotNet.Cil;
 
 
-// ldc.i4.2 etc.. should be handled since the Operand is null
-// multiplication needs to be implemented
+
 public class DeGremlin
 {
     private readonly ModuleDefinition module;

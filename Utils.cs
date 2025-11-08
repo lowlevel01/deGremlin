@@ -6,6 +6,8 @@ using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.PE.DotNet.Cil;
 
 
+// ldc.i4.2 etc.. should be handled since the Operand is null
+// multiplication needs to be implemented
 public class DeGremlin
 {
     private readonly ModuleDefinition module;
@@ -228,6 +230,9 @@ public class DeGremlin
             }
         }
     }
+
+    
+
     private void removeXOR()
     {
         foreach (var type in module.GetAllTypes())
@@ -258,40 +263,7 @@ public class DeGremlin
                                     int val1, val2;
                                     if (!getIntegerOperand(prev_inst, out val1) || !getIntegerOperand(prev_inst2, out val2))
                                         continue;
-                                    /*
-                                    if (prev_inst.OpCode == CilOpCodes.Ldc_I4_S)
-                                    {
-                                        val1 = (int)(sbyte)(prev_inst.Operand);
-                                    }
-                                    else if (prev_inst.OpCode == CilOpCodes.Ldc_I4)
-                                    {
-                                        val1 = (int)(prev_inst.Operand);
-                                    }
-                                    else if (!getIntegerOperand(prev_inst, out val1))
-                                    {
-                                        continue;
-                                    }
-                                    else
-                                    {
-                                        continue;
-                                    }
 
-                                    if (prev_inst2.OpCode == CilOpCodes.Ldc_I4_S)
-                                    {
-                                        val2 = (int)(sbyte)(prev_inst2.Operand);
-                                    }
-                                    else if (prev_inst2.OpCode == CilOpCodes.Ldc_I4)
-                                    {
-                                        val2 = (int)(prev_inst2.Operand);
-                                    }
-                                    else if (!getIntegerOperand(prev_inst2, out val2))
-                                    {
-                                        continue;
-                                    }
-                                    else
-                                    {
-                                        continue;
-                                    } */
 
 
                                     int xor = val1 ^ val2;
@@ -344,48 +316,6 @@ public class DeGremlin
                                     int val1, val2;
                                     if (!getIntegerOperand(prev_inst, out val1) || !getIntegerOperand(prev_inst2, out val2))
                                         continue;
-                                    /*
-                                    if (prev_inst.OpCode == CilOpCodes.Ldc_I4_S)
-                                    {
-                                        val1 = (int)(sbyte)(prev_inst.Operand);
-                                    }
-                                    else if (prev_inst.OpCode == CilOpCodes.Ldc_I4)
-                                    {
-                                        val1 = (int)(prev_inst.Operand);
-                                    }else if(prev_inst.OpCode == CilOpCodes.Ldc_I8)
-                                    {
-                                        val1 = (int)(prev_inst.Operand);
-                                    }
-                                    else if(!getIntegerOperand(prev_inst, out val1))
-                                    {
-                                        continue;
-                                    }
-                                    else
-                                    {
-                                        continue;
-                                    }
-
-                                    if (prev_inst2.OpCode == CilOpCodes.Ldc_I4_S)
-                                    {
-                                        val2 = (int)(sbyte)(prev_inst2.Operand);
-                                    }
-                                    else if (prev_inst2.OpCode == CilOpCodes.Ldc_I4)
-                                    {
-                                        val2 = (int)(prev_inst2.Operand);
-                                    }
-                                    else if (prev_inst2.OpCode == CilOpCodes.Ldc_I8)
-                                    {
-                                        val2 = (int)(prev_inst2.Operand);
-                                    }
-                                    else if (!getIntegerOperand(prev_inst2, out val2))
-                                    {
-                                        continue;
-                                    }
-                                    else
-                                    {
-                                        continue;
-                                    }
-                                    */
 
                                     int sum = val1 + val2;
 
@@ -438,49 +368,7 @@ public class DeGremlin
                                     int val1, val2;
                                     if (!getIntegerOperand(prev_inst, out val1) || !getIntegerOperand(prev_inst2, out val2))
                                         continue;
-                                    /*
-                                    if (prev_inst.OpCode == CilOpCodes.Ldc_I4_S)
-                                    {
-                                        val1 = (int)(sbyte)(prev_inst.Operand);
-                                    }
-                                    else if (prev_inst.OpCode == CilOpCodes.Ldc_I4)
-                                    {
-                                        val1 = (int)(prev_inst.Operand);
-                                    }
-                                    else if (prev_inst.OpCode == CilOpCodes.Ldc_I8)
-                                    {
-                                        val1 = (int)(prev_inst.Operand);
-                                    }
-                                    else if (!getIntegerOperand(prev_inst, out val1))
-                                    {
-                                        continue;
-                                    }
-                                    else
-                                    {
-                                        continue;
-                                    }
-
-                                    if (prev_inst2.OpCode == CilOpCodes.Ldc_I4_S)
-                                    {
-                                        val2 = (int)(sbyte)(prev_inst2.Operand);
-                                    }
-                                    else if (prev_inst2.OpCode == CilOpCodes.Ldc_I4)
-                                    {
-                                        val2 = (int)(prev_inst2.Operand);
-                                    }
-                                    else if (prev_inst2.OpCode == CilOpCodes.Ldc_I8)
-                                    {
-                                        val2 = (int)(prev_inst2.Operand);
-                                    }
-                                    else if (!getIntegerOperand(prev_inst2, out val2))
-                                    {
-                                        continue;
-                                    }
-                                    else
-                                    {
-                                        continue;
-                                    }
-                                    */
+                                    
 
                                     int mul = val1 * val2;
 
@@ -533,49 +421,7 @@ public class DeGremlin
                                     int val1, val2;
                                     if (!getIntegerOperand(prev_inst, out val1) || !getIntegerOperand(prev_inst2, out val2))
                                         continue;
-                                    /*
-                                    if (prev_inst.OpCode == CilOpCodes.Ldc_I4_S)
-                                    {
-                                        val1 = (int)(sbyte)(prev_inst.Operand);
-                                    }
-                                    else if (prev_inst.OpCode == CilOpCodes.Ldc_I4)
-                                    {
-                                        val1 = (int)(prev_inst.Operand);
-                                    }
-                                    else if (prev_inst.OpCode == CilOpCodes.Ldc_I8)
-                                    {
-                                        val1 = (int)(prev_inst.Operand);
-                                    }
-                                    else if (!getIntegerOperand(prev_inst, out val1))
-                                    {
-                                        continue;
-                                    }
-                                    else
-                                    {
-                                        continue;
-                                    }
-
-                                    if (prev_inst2.OpCode == CilOpCodes.Ldc_I4_S)
-                                    {
-                                        val2 = (int)(sbyte)(prev_inst2.Operand);
-                                    }
-                                    else if (prev_inst2.OpCode == CilOpCodes.Ldc_I4)
-                                    {
-                                        val2 = (int)(prev_inst2.Operand);
-                                    }
-                                    else if (prev_inst2.OpCode == CilOpCodes.Ldc_I8)
-                                    {
-                                        val2 = (int)(prev_inst2.Operand);
-                                    }
-                                    else if (!getIntegerOperand(prev_inst2, out val2))
-                                    {
-                                        continue;
-                                    }
-                                    else
-                                    {
-                                        continue;
-                                    }
-                                    */
+                                    
 
                                     int diff = val2 - val1;
                                     body.Instructions[idx1].ReplaceWithNop();

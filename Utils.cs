@@ -6,8 +6,6 @@ using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.PE.DotNet.Cil;
 
 
-// ldc.i4.2 etc.. should be handled since the Operand is null
-// multiplication needs to be implemented
 public class DeGremlin
 {
     private readonly ModuleDefinition module;
@@ -44,7 +42,8 @@ public class DeGremlin
             removeChecked();
             //transformStoI4();
             removeAdd();
-            //removeSub();
+            removeMul();
+            removeSub();
             removeXOR();
             decryptStrings();
         }
@@ -65,6 +64,58 @@ public class DeGremlin
         return null;
     }
 
+    private bool getIntegerOperand(CilInstruction inst, out int value)
+    {
+        value = 0;
+
+        // Handle ldc.i4 variants
+        if (inst.OpCode == CilOpCodes.Ldc_I4)
+            value = (int)inst.Operand;
+        else if (inst.OpCode == CilOpCodes.Ldc_I4_S)
+            value = (int)(sbyte)inst.Operand;
+        else if (inst.OpCode == CilOpCodes.Ldc_I4_0)
+            value = 0;
+        else if (inst.OpCode == CilOpCodes.Ldc_I4_1)
+            value = 1;
+        else if (inst.OpCode == CilOpCodes.Ldc_I4_2)
+            value = 2;
+        else if (inst.OpCode == CilOpCodes.Ldc_I4_3)
+            value = 3;
+        else if (inst.OpCode == CilOpCodes.Ldc_I4_4)
+            value = 4;
+        else if (inst.OpCode == CilOpCodes.Ldc_I4_5)
+            value = 5;
+        else if (inst.OpCode == CilOpCodes.Ldc_I4_6)
+            value = 6;
+        else if (inst.OpCode == CilOpCodes.Ldc_I4_7)
+            value = 7;
+        else if (inst.OpCode == CilOpCodes.Ldc_I4_8)
+            value = 8;
+        else if (inst.OpCode == CilOpCodes.Ldc_I4_M1)
+            value = -1;
+        // Handle ldc.i8 (int64) - may truncate
+        else if (inst.OpCode == CilOpCodes.Ldc_I8)
+        {
+            long longValue = (long)inst.Operand;
+            value = (int)longValue; // Truncates if value is outside int32 range
+        }
+        // Handle ldc.r4 (float) - converts to int
+        else if (inst.OpCode == CilOpCodes.Ldc_R4)
+        {
+            float floatValue = (float)inst.Operand;
+            value = (int)floatValue; // Truncates decimal part
+        }
+        // Handle ldc.r8 (double) - converts to int
+        else if (inst.OpCode == CilOpCodes.Ldc_R8)
+        {
+            double doubleValue = (double)inst.Operand;
+            value = (int)doubleValue; // Truncates decimal part
+        }
+        else
+            return false;
+
+        return true;
+    }
     private void decryptStrings()
     {
         foreach (var type in module.GetAllTypes())
@@ -205,6 +256,9 @@ public class DeGremlin
                                         continue;
 
                                     int val1, val2;
+                                    if (!getIntegerOperand(prev_inst, out val1) || !getIntegerOperand(prev_inst2, out val2))
+                                        continue;
+                                    /*
                                     if (prev_inst.OpCode == CilOpCodes.Ldc_I4_S)
                                     {
                                         val1 = (int)(sbyte)(prev_inst.Operand);
@@ -212,6 +266,10 @@ public class DeGremlin
                                     else if (prev_inst.OpCode == CilOpCodes.Ldc_I4)
                                     {
                                         val1 = (int)(prev_inst.Operand);
+                                    }
+                                    else if (!getIntegerOperand(prev_inst, out val1))
+                                    {
+                                        continue;
                                     }
                                     else
                                     {
@@ -226,10 +284,14 @@ public class DeGremlin
                                     {
                                         val2 = (int)(prev_inst2.Operand);
                                     }
-                                    else
+                                    else if (!getIntegerOperand(prev_inst2, out val2))
                                     {
                                         continue;
                                     }
+                                    else
+                                    {
+                                        continue;
+                                    } */
 
 
                                     int xor = val1 ^ val2;
@@ -280,6 +342,9 @@ public class DeGremlin
                                         continue;
 
                                     int val1, val2;
+                                    if (!getIntegerOperand(prev_inst, out val1) || !getIntegerOperand(prev_inst2, out val2))
+                                        continue;
+                                    /*
                                     if (prev_inst.OpCode == CilOpCodes.Ldc_I4_S)
                                     {
                                         val1 = (int)(sbyte)(prev_inst.Operand);
@@ -290,6 +355,10 @@ public class DeGremlin
                                     }else if(prev_inst.OpCode == CilOpCodes.Ldc_I8)
                                     {
                                         val1 = (int)(prev_inst.Operand);
+                                    }
+                                    else if(!getIntegerOperand(prev_inst, out val1))
+                                    {
+                                        continue;
                                     }
                                     else
                                     {
@@ -304,21 +373,120 @@ public class DeGremlin
                                     {
                                         val2 = (int)(prev_inst2.Operand);
                                     }
-                                    else if (prev_inst.OpCode == CilOpCodes.Ldc_I8)
+                                    else if (prev_inst2.OpCode == CilOpCodes.Ldc_I8)
                                     {
                                         val2 = (int)(prev_inst2.Operand);
+                                    }
+                                    else if (!getIntegerOperand(prev_inst2, out val2))
+                                    {
+                                        continue;
                                     }
                                     else
                                     {
                                         continue;
                                     }
-
+                                    */
 
                                     int sum = val1 + val2;
 
                                     body.Instructions[idx1].ReplaceWithNop();
                                     body.Instructions[idx2].ReplaceWithNop();
                                     instruction.ReplaceWith(CilOpCodes.Ldc_I4, (int)sum);
+                                    //Console.WriteLine(prev_inst);
+                                }
+                                catch (Exception ex) { continue; }
+                            }
+                            //Console.WriteLine($"0x{Convert.ToString(instruction.Offset, 16)}");
+
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void removeMul()
+    {
+        foreach (var type in module.GetAllTypes())
+        {
+            foreach (var method in type.Methods)
+            {
+                //Console.WriteLine($"{method.Name} : {method.MetadataToken}");
+
+                if (method.HasMethodBody)
+                {
+                    if (method.CilMethodBody is { } body)
+                    {
+                        foreach (var instruction in body.Instructions)
+                        {
+                            // current_inst.OpCode.Mnemonic.StartsWith("ldc.")
+                            if (instruction.OpCode == CilOpCodes.Mul ||
+                                instruction.OpCode == CilOpCodes.Mul_Ovf ||
+                                instruction.OpCode == CilOpCodes.Mul_Ovf_Un)
+                            {
+                                try
+                                {
+                                    var index = body.Instructions.IndexOf(instruction);
+
+                                    int idx1, idx2;
+                                    var prev_inst = GetPrevNonNop(body.Instructions, index, out idx1);
+                                    var prev_inst2 = GetPrevNonNop(body.Instructions, idx1, out idx2);
+
+                                    if (prev_inst == null || prev_inst2 == null)
+                                        continue;
+
+                                    int val1, val2;
+                                    if (!getIntegerOperand(prev_inst, out val1) || !getIntegerOperand(prev_inst2, out val2))
+                                        continue;
+                                    /*
+                                    if (prev_inst.OpCode == CilOpCodes.Ldc_I4_S)
+                                    {
+                                        val1 = (int)(sbyte)(prev_inst.Operand);
+                                    }
+                                    else if (prev_inst.OpCode == CilOpCodes.Ldc_I4)
+                                    {
+                                        val1 = (int)(prev_inst.Operand);
+                                    }
+                                    else if (prev_inst.OpCode == CilOpCodes.Ldc_I8)
+                                    {
+                                        val1 = (int)(prev_inst.Operand);
+                                    }
+                                    else if (!getIntegerOperand(prev_inst, out val1))
+                                    {
+                                        continue;
+                                    }
+                                    else
+                                    {
+                                        continue;
+                                    }
+
+                                    if (prev_inst2.OpCode == CilOpCodes.Ldc_I4_S)
+                                    {
+                                        val2 = (int)(sbyte)(prev_inst2.Operand);
+                                    }
+                                    else if (prev_inst2.OpCode == CilOpCodes.Ldc_I4)
+                                    {
+                                        val2 = (int)(prev_inst2.Operand);
+                                    }
+                                    else if (prev_inst2.OpCode == CilOpCodes.Ldc_I8)
+                                    {
+                                        val2 = (int)(prev_inst2.Operand);
+                                    }
+                                    else if (!getIntegerOperand(prev_inst2, out val2))
+                                    {
+                                        continue;
+                                    }
+                                    else
+                                    {
+                                        continue;
+                                    }
+                                    */
+
+                                    int mul = val1 * val2;
+
+                                    body.Instructions[idx1].ReplaceWithNop();
+                                    body.Instructions[idx2].ReplaceWithNop();
+                                    instruction.ReplaceWith(CilOpCodes.Ldc_I4, (int)mul);
                                     //Console.WriteLine(prev_inst);
                                 }
                                 catch (Exception ex) { continue; }
@@ -363,6 +531,9 @@ public class DeGremlin
                                         continue;
 
                                     int val1, val2;
+                                    if (!getIntegerOperand(prev_inst, out val1) || !getIntegerOperand(prev_inst2, out val2))
+                                        continue;
+                                    /*
                                     if (prev_inst.OpCode == CilOpCodes.Ldc_I4_S)
                                     {
                                         val1 = (int)(sbyte)(prev_inst.Operand);
@@ -374,6 +545,10 @@ public class DeGremlin
                                     else if (prev_inst.OpCode == CilOpCodes.Ldc_I8)
                                     {
                                         val1 = (int)(prev_inst.Operand);
+                                    }
+                                    else if (!getIntegerOperand(prev_inst, out val1))
+                                    {
+                                        continue;
                                     }
                                     else
                                     {
@@ -392,17 +567,17 @@ public class DeGremlin
                                     {
                                         val2 = (int)(prev_inst2.Operand);
                                     }
+                                    else if (!getIntegerOperand(prev_inst2, out val2))
+                                    {
+                                        continue;
+                                    }
                                     else
                                     {
                                         continue;
                                     }
-
+                                    */
 
                                     int diff = val2 - val1;
-                                    Console.WriteLine(val2.ToString());
-                                    Console.WriteLine(val1.ToString());
-                                    Console.WriteLine(diff.ToString());
-                                    Console.WriteLine("----------");
                                     body.Instructions[idx1].ReplaceWithNop();
                                     body.Instructions[idx2].ReplaceWithNop();
                                     instruction.ReplaceWith(CilOpCodes.Ldc_I4, (int)diff);

@@ -22,7 +22,8 @@ degremlin.exe [filepath] [method_token_in_hex]
 
 
 # Example
-##### This is from the Gremlin Stealer sample
+##### This is from the Gremlin Stealer sample ( https://bazaar.abuse.ch/sample/d21c8a005125a27c49343e7b5b612fc51160b6ae9eefa0a0620f67fa4d0a30f6/ )
+
 ![](images/before_after.png)
 
 
